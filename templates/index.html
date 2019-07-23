@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>Flask-SocketIO Test</title>
+    <script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
+    <script type="text/javascript" charset="utf-8">
+        $(document).ready(function() {
+            var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + '/notification');
+            socket.on('connect', function() {
+                $('#log').prepend('I\'m connected');
+            });
+            socket.on('output', function(data) {
+                $('#log').prepend(`${data}\n`);
+            });
+            socket.on('disconnect', function() {
+                $('#log').prepend('Disconnected<br>');
+            });
+            socket.on('push', function(msg) {
+                $('#log').prepend($('<div/>').text(msg.data).html() + '<br>');
+            });
+            $('form#emit').submit(function(event) {
+                socket.emit('push', {message: $('#emit_data').val(), room: $('#join_room').val()});
+                return false;
+            });
+            $('form#join').submit(function(event) {
+                socket.emit('subscribe', {room: $('#join_room').val()});
+                return false;
+            });
+            $('form#leave').submit(function(event) {
+                socket.emit('unsubscribe', {room: $('#leave_room').val()});
+                return false;
+            });
+            $('form#disconnect').submit(function(event) {
+                socket.disconnect();
+                return false;
+            });
+        });
+    </script>
+</head>
+<body>
+    <h1>Web Notify</h1>
+    <h2>Send:</h2>
+    <form id="emit" method="POST" action='#'>
+        <input type="text" name="emit_data" id="emit_data" placeholder="Message">
+        <input type="submit" value="Echo">
+    </form>
+    <form id="join" method="POST" action='#'>
+        <input type="text" name="join_room" id="join_room" placeholder="Room Name">
+        <input type="submit" value="Join Room">
+    </form>
+    <form id="leave" method="POST" action='#'>
+        <input type="text" name="leave_room" id="leave_room" placeholder="Room Name">
+        <input type="submit" value="Leave Room">
+    </form>
+    <h2>Receive:</h2>
+    <div id="log"></div>
+</body>
+</html>
